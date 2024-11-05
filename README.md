@@ -29,7 +29,7 @@ d ./src
 - Bundlers
 - Compilers/decompilers
 - CI/CD utilities
-- Batch video/audio/photo convertors/processors
+- Batch video/audio/photo converters/processors
 - Intrusion detection systems
 - Obfuscators/deobfuscators
 
@@ -44,7 +44,7 @@ d ./src
 
 - Directory separator is always `/`, even in Microsoft Windows.
 
-- If the entry ends with `/`, it will match a directory, otherwise will match a file.
+- If the entry ends with `/`, it will match a directory; otherwise, will match a file.
 
 - If the entry starts with `/`, it will be related to the root target path.
 
@@ -57,11 +57,11 @@ d ./src
 
 
 ## Output
-Depending on the language, output can be in 2 styles, e.g Bash version is based on the first style and PHP version on the second one:
+Depending on the language, the output can be in 2 styles, e.g Bash version is based on the first style and PHP version on the second one:
 
-1. A string which each file/folder path is on a separate line and directories are prepended by `"d "` (without quotations), and other structures (files, etc) are prepended by `"- "` or other characters.
+1. A string in which each file/folder path is on a separate line and directories are prepended by `"d "` (without quotations), and other structures (files, etc) are prepended by `"- "` or other characters.
 
-2. A 2D array which each file/folder is a separate member and itself is an array whose first member is a character representing the type (`"d"` for directories and `"-"` or other characters for non-directories) and the second member is the path.
+2. A 2D array in which each file/folder is a separate member and itself is an array whose first member is a character representing the type (`"d"` for directories and `"-"` or other characters for non-directories) and the second member is the path.
 
 
 
