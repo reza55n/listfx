@@ -57,7 +57,7 @@ d ./src
 
 
 ## Output
-Depending on the language, output can be in 2 styles, e.g Bash version is baesd on the first style and PHP version on the second one:
+Depending on the language, output can be in 2 styles, e.g Bash version is based on the first style and PHP version on the second one:
 
 1. A string which each file/folder path is on a separate line and directories are prepended by `"d "` (without quotations), and other structures (files, etc) are prepended by `"- "` or other characters.
 
