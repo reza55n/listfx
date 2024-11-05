@@ -46,7 +46,7 @@ d ./src
 
 - If the entry ends with `/`, it will match a directory, otherwise will match a file.
 
-- If the entry starts with `/`, it will be related to `$dir`
+- If the entry starts with `/`, it will be related to the root target path.
 
 - If the entry doesn't start with `/`, it can be anywhere and also can't contain `/` in the middle.
 
@@ -69,11 +69,11 @@ Depending on the language, output can be in 2 styles, e.g Bash version is baesd 
 
 ## Example rules
 ### In `exclude` mode
-`/vendor/` excludes the `vendor` folder placed right under `$dir`, and all its contents.
+`/vendor/` excludes the `vendor` folder placed right under the root target path, and all its contents.
 
 `node_modules.*` excludes `node_modules.tar`, `node_modules.zip`, etc files, wherever they are, and `node_modules/` excludes only `node_modules` folder, wherever it is, and all its contents.
 
-`/test-?/*.php` excludes all `PHP` files that are directly inside `test-1`, `test-a`, etc folders under `$dir`.
+`/test-?/*.php` excludes all `PHP` files that are directly inside `test-1`, `test-a`, etc folders under the root target path.
 
 To exclude a folder's contents and keep itself, instead of `/parent/exclude-children/` you can end the phrase with `/*` such as `/parent/exclude-children/*`
 
@@ -84,9 +84,9 @@ To exclude a folder's contents and keep itself, instead of `/parent/exclude-chil
 
 All directories, nested: `*/`
 
-All file right under `$dir`: `/*`
+All file right under the root target path: `/*`
 
-All JavaScript files right under `$dir`: `/*.js`
+All JavaScript files right under the root target path: `/*.js`
 
 All files and folders with depth of 2: `/*` + `/*/` + `/*/*` + `/*/*/` (second rule is necessary to allow to move into subdirectories)
 
