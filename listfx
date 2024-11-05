@@ -1,6 +1,6 @@
 #!/bin/bash
 # You can add current file's containig directory to PATH or
-# copy it to an already-added folder.
+# copy it to an already-added folder (such as `/bin`).
 # Also change its permission to executable, if needed.
 
 # Alvandsoft listFX
