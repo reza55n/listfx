@@ -1,0 +1,245 @@
+#!/bin/bash
+# You can add current file's containig directory to PATH or
+# copy it to an already-added folder.
+# Also change its permission to executable, if needed.
+
+# Alvandsoft listFX
+# Copyright (C) 2024 Reza Alizade - <github.com/reza55n/listfx>
+year=2024
+ver=1.0
+
+# Examples:
+#
+# # Without any rules:
+# $ listfx .
+#
+# $ listfx . /.git/
+#
+# $ listfx /home - include 1 <<rules
+# */
+# *.php
+# rules
+#
+# $ listfx . <<rules
+# .git/
+# *temp*
+# rules
+#
+# # Similar to above example:
+# $ listfx . ".git/
+# *temp*"
+
+
+########### Processing args
+
+if [ "$1" = "--help" -o "$1" = "-v" -o "$1" = "--version" ]; then
+  echo "Alvandsoft listFX $ver"
+  echo "Copyright (C) $year Reza Alizade"
+  exit
+fi
+
+debug=false
+
+dir=${1-.}
+
+if [ "$2" = "-" ]; then
+  rules="$(cat)"
+else
+  rules="$2"
+fi
+mapfile -t rules < <(echo -n "$rules")
+
+if [ -z "$3" -o "$3" = exclude ]; then
+  exclude=true
+elif [ "$3" = include ]; then
+  exclude=false
+else
+  echo "Invalid mode '$3' (should be 'exclude', 'include' or '')" 1>&2
+  exit 1
+fi
+
+if [ "$4" = reverse ]; then
+  reverse=true
+  echo "Not implemented yet!"
+  exit 1
+elif [ -z "$4" ]; then
+  reverse=false
+else
+  echo "Invalid 4th switch '$4' (should be 'reverse' or '')" 1>&2
+  exit 1
+fi
+
+if $debug; then
+  echo "## Dir: $dir"
+  echo "## Rules:"
+  array-dump "${rules[@]}"
+  echo -n "## Exclude: "
+  $exclude && echo yes || echo no
+  echo -n "## Reverse: "
+  $reverse && echo yes || echo no
+  echo "============="
+fi
+
+
+########### Process
+
+# result=()
+
+function slash-count {
+  var="$1"
+  res="${var//[^\/]}"
+  return "${#res}"
+}
+
+function listfxInternal {
+  local currentPath=$1
+  
+  # In list mode, `ls` needs extra work to get only file's name, for example it
+  # shows links in form of `name -> path` and generally it will be a hacky way
+  # to manually substring its result, therefore `-p` switch is enough to
+  # make separation between only directories and all other things.
+  mapfile -t entriesTmp < <(ls -ANp1 "$currentPath")
+  
+  # Make it local, just in case
+  local entries=( "${entriesTmp[@]}" )
+  local rulesHereDir=()
+  local rulesHereFile=()
+  local rulesChildren=()
+  i=-2
+  for item in "$@"; do
+    ((i++))
+    [ "$i" -eq -1 ] && continue
+    
+    if [[ -z "$item" || "$item" == "/" || "$item" == *"//"* ]]; then
+      echo "Invalid rule '$item' (prevent empty items or entering two consecutive slashes: '//')." >&2
+      exit 1
+    fi
+
+    itemLen=${#item}
+    if [[ "${item:itemLen-1}" == "/" ]]; then
+      ruleIsDir=true
+      item="${item:0:itemLen-1}"
+    else
+      ruleIsDir=false
+    fi
+
+    if [[ "${item:0:1}" == "/" ]]; then
+      # Related to $dir
+      item="${item:1}"
+      slash-count "$item"
+      level=$?
+
+      if [[ $level -eq 0 ]]; then
+        # Such as `/tmp` (turned into `tmp`)
+        if $ruleIsDir; then
+          rulesHereDir+=("$item")
+        else
+          rulesHereFile+=("$item")
+        fi
+
+      else
+        # Such as `/usr/bin` (turned into `usr/bin`)
+        # Using tab delimited array, instead of a map with array values
+        # Even with '/*/*' or '/*/*/*', below command isn't called so much,
+        # therefore $() is okay
+        pos=$(expr index "$item" "/")
+        tmpVar="${item:0:pos-1}	${item:pos-1}" # Tab is entered here
+        $ruleIsDir && tmpVar="$tmpVar/"
+        rulesChildren+=( "$tmpVar" )
+      fi
+
+    else
+      # Not related to $dir
+      slash-count "$item"
+      level=$?
+      
+      if [[ $level -ne 0 ]]; then
+        echo "Invalid \$rules item '$item' (to use '/', the item should start with '/')." >&2
+        exit 1
+      fi
+
+      if $ruleIsDir; then
+        rulesHereDir+=("$item")
+      else
+        rulesHereFile+=("$item")
+      fi
+      
+      tmpVar="*	$item" # Tab is entered here
+      $ruleIsDir && tmpVar="$tmpVar/"
+      rulesChildren+=( "$tmpVar" )
+    fi
+  done
+
+  # Especially for '/'
+  [ "${currentPath:0-1}" = "/" ] && currentPath=${currentPath:0:-1}
+  
+  if $debug; then
+    echo "################# Path: $currentPath"
+    echo "rulesHereDir:"
+    array-dump "${rulesHereDir[@]}"
+    echo "rulesHereFile:"
+    array-dump "${rulesHereFile[@]}"
+    echo "rulesChildren:"
+    array-dump "${rulesChildren[@]}"
+    echo -e "############\n"
+  fi
+  
+  for entry in "${entries[@]}"; do
+    [ "${entry:0-1}" = "/" ] && entryIsDir=true || entryIsDir=false
+    
+    haveToGo=false
+    if $entryIsDir; then
+      entry=${entry:0:-1}
+      for rle in "${rulesHereDir[@]}"; do
+        if [[ "$entry" == $rle ]]; then
+          haveToGo=true
+          break
+        fi
+      done
+    else
+      for rle in "${rulesHereFile[@]}"; do
+        if [[ "$entry" == $rle ]]; then
+          haveToGo=true
+          break
+        fi
+      done
+    fi
+    
+    if $exclude; then
+      $haveToGo && continue
+    else
+      $haveToGo || continue
+    fi
+    
+    full="$currentPath/$entry"
+    
+    if $entryIsDir; then
+      # result+=( "d $full" )
+      echo "d $full"
+      local rulesToSend=()
+      for ruleCh in "${rulesChildren[@]}"; do
+        wildcard="${ruleCh%%$'\t'*}" # Get until tab, without using pipes
+        if [[ "$entry" == $wildcard ]]; then
+          # Even this part runs often for rules not related to root and using
+          # `cut` and `piping`, decreases performance by each extra rule
+          # value=$(cut -f 2 <<< "$ruleCh")
+          wclen="${#wildcard}"
+          ((wclen++))
+          value="${ruleCh:$wclen}"
+          rulesToSend+=( "$value" )
+        fi
+      done
+      listfxInternal "$full" "${rulesToSend[@]}"
+    else
+      # result+=( "- $full" )
+      echo "- $full"
+    fi
+  done
+}
+
+# Direct calling the function instead of piping, makes the process two times faster.
+# Tested: 22 vs 42 seconds and other test: 200 vs 380 milliseconds.
+# echo -n "$dir" | listfxInternal "${rules[@]}"
+listfxInternal "$dir" "${rules[@]}"
+
+# array-dump "${result[@]}"
