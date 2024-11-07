@@ -1,7 +1,7 @@
 
 **listFX – list Files with eXclude/include rules!**
 
-Currently supports Bash and PHP.
+**Currently supports Bash and PHP.**
 
 Basic Bash example to exclude `.git` folder(s) while listing all files/folders from the current path:
 
