@@ -118,18 +118,18 @@ All Python files, wherever they are: `*/` + `*.py` (directories should be manual
 
 
 
-## Compare to POSIX tools (find, grep, du)
+## Compare to POSIX tools
 **listFX** is mainly a function that can be re-implemented in every programming language with a simple list of rules and an `include/exclude` option as inputs, in contrast to POSIX tools that each of them has multiple switches and options for very different use cases may occur.
 
-
+### find
 **find** can be incredibly complex for the use cases that **listFX** can simply handle and even excluding a single directory requires multiple switches, let alone excluding multiple file/folders with wildcard and related to the root or anywhere they are and also with simple switch between exlude and include modes, that all can be simply done in **listFX**.
 
-
+### grep
 **grep** is generally for looking into (files') contents and it doesn't give us directories and empty files. Also piping from find to grep (`find . | grep ...`) has a very low performance, as instead of the intended paths/directories, it will first list ALL files without any blacklists (including contents of `dist`, `.git`, `cache`, `node_modules`, `vendor`, etc) and only after that, starts filtering the unwanted files/folders.
 
-
+### du
 **du** is mainly for estimation of disk usage (size/count) and not listing files, therefore it gives the results in reverse order and even with `-a` switch it doesn't make a separation between files and directories in the output. Also it doesn't have `include` mode and its `--exclude` switch doesn't have a separation between files and folders, as well as separation between files on the root target path or wherever they are.
 
-
-**Weakness:** listFX is not implemented in any compiled language (yet) and Bash version is slower than find/grep, BTW its simplicity and also excluding/including system can overcome its slowness.
+### Current weakness of listFX
+listFX is not implemented in any compiled language (yet) and Bash version is slower than find/grep, BTW its simplicity and also excluding/including system can overcome its slowness.
 
